@@ -10,18 +10,18 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root {
-  --bg: #FFF0F5;
+  --bg: #FFF5F5;
   --bg2: #FFFFFF;
-  --bg3: #FFE8F2;
+  --bg3: #FDECEA;
   --card: #FFFFFF;
-  --pink: #D4307A;
-  --pink2: #E8609A;
-  --pink-bg: #FFE0EE;
-  --pink-border: rgba(212,48,122,0.18);
-  --pink-border2: rgba(212,48,122,0.30);
-  --text: #2A0F1A;
-  --text2: #A06080;
-  --text3: #C090A8;
+  --pink: #C0392B;
+  --pink2: #E74C3C;
+  --pink-bg: #FDECEA;
+  --pink-border: rgba(192,57,43,0.18);
+  --pink-border2: rgba(192,57,43,0.30);
+  --text: #2C0A0A;
+  --text2: #A04040;
+  --text3: #C08080;
   --green: #1A8A4A;
   --green-bg: #E8F8EE;
   --green-border: #90D0B0;
@@ -140,14 +140,14 @@ textarea.input-field { resize: none; height: 70px; line-height: 1.5; }
 
 <div class="header">
   <div>
-    <div class="header-title">🌸 Burn Tracker</div>
+    <div class="header-title">🔥 Burn Tracker</div>
     <div class="header-sub">Anggun's daily program</div>
   </div>
   <div class="start-chip">Start: 62.3 kg</div>
 </div>
 
 <div class="quote-bar" onclick="nextQuote()">
-  <div class="quote-flower">💬</div>
+  <div class="quote-flower">🔥</div>
   <div class="quote-body">
     <div class="quote-text" id="quote-text">Loading your quote...</div>
     <div class="quote-tap">Tap for a new one</div>
@@ -427,12 +427,18 @@ let quoteIdx = 0;
 
 function loadStorage() {
   try {
-    const r = localStorage.getItem('burn_v3');
+    const r = localStorage.getItem('burn_v4');
     if(r) { const p = JSON.parse(r); db = p.db||{}; groceryChecked = p.grocery||[]; }
+    // migrate old data - ensure all check arrays have 9 items
+    Object.keys(db).forEach(k => {
+      if(db[k].checks && db[k].checks.length < 9) {
+        while(db[k].checks.length < 9) db[k].checks.push(false);
+      }
+    });
   } catch(e){}
 }
 function saveStorage() {
-  try { localStorage.setItem('burn_v3', JSON.stringify({db, grocery: groceryChecked})); } catch(e){}
+  try { localStorage.setItem('burn_v4', JSON.stringify({db, grocery: groceryChecked})); } catch(e){}
 }
 function getKey(o) { const d=new Date(); d.setDate(d.getDate()+o); return d.toISOString().split('T')[0]; }
 function getDateStr(o) { const d=new Date(); d.setDate(d.getDate()+o); return DAYS_F[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear(); }
@@ -445,7 +451,13 @@ function render() {
   const data = getDay();
   document.getElementById('date-label').textContent = getDateStr(offset);
   document.getElementById('day-num').textContent = getDaySub(offset);
-  for(let i=0;i<9;i++){const r=document.getElementById('c'+i);data.checks[i]?r.classList.add('done'):r.classList.remove('done');}
+  for(let i=0;i<9;i++){
+    const r=document.getElementById('c'+i);
+    const ci=document.getElementById('ci'+i);
+    const checked = data.checks && data.checks[i] === true;
+    if(checked){r.classList.add('done');}else{r.classList.remove('done');}
+    if(ci){ci.style.color = checked ? '#fff' : 'transparent'; ci.style.background = checked ? 'var(--green)' : 'transparent'; ci.style.borderColor = checked ? 'var(--green)' : 'var(--pink-border2)';}
+  }
   for(let i=0;i<8;i++){const b=document.getElementById('w'+i);data.water[i]?b.classList.add('on'):b.classList.remove('on');}
   for(let i=0;i<5;i++){const b=document.getElementById('m'+i);data.mood===i?b.classList.add('sel'):b.classList.remove('sel');}
   document.getElementById('wt-current').value = data.weight;
@@ -460,10 +472,8 @@ function render() {
 }
 
 function updateStats(data) {
-  const done = data.checks.filter(Boolean).length;
   const habit = data.checks.slice(0,5).filter(Boolean).length;
   const workout = data.checks.slice(5,9).filter(Boolean).length;
-  document.getElementById('s-check').textContent = done+'/9';
   document.getElementById('s-habit').textContent = habit+'/5';
   document.getElementById('s-workout').textContent = workout+'/4';
   document.getElementById('s-water').textContent = data.water.filter(Boolean).length;
@@ -482,7 +492,15 @@ function snapshot() {
   updateStats(data);
 }
 
-function toggle(i) { snapshot(); const d=getDay(); d.checks[i]=!d.checks[i]; setDay(d); render(); }
+function toggle(i) {
+  snapshot();
+  const d = getDay();
+  if(!d.checks) d.checks = new Array(9).fill(false);
+  while(d.checks.length < 9) d.checks.push(false);
+  d.checks[i] = !d.checks[i];
+  setDay(d);
+  render();
+}
 function toggleWater(i) { snapshot(); const d=getDay(); d.water[i]=!d.water[i]; setDay(d); render(); }
 function setMood(i) { snapshot(); const d=getDay(); d.mood=i; setDay(d); render(); }
 

@@ -126,7 +126,8 @@ textarea.input-field { resize: none; height: 70px; line-height: 1.5; }
 .bar.today { background: var(--pink); border-color: var(--pink); }
 .bar-day { font-size: 9px; color: var(--text3); }
 .bar-wt { font-size: 9px; color: var(--text2); }
-
+.export-btn { display: block; width: calc(100% - 32px); margin: 20px 16px 8px; padding: 13px; background: transparent; color: var(--pink); border: 1.5px solid var(--pink); border-radius: var(--radius); font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.export-btn:active { background: var(--pink-bg); }
 .save-btn { display: block; width: calc(100% - 32px); margin: 20px 16px 0; padding: 16px; background: var(--pink); color: #fff; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; -webkit-appearance: none; }
 .save-btn:active { opacity: 0.85; }
 
@@ -372,7 +373,7 @@ textarea.input-field { resize: none; height: 70px; line-height: 1.5; }
   <div class="sec-label">Weight — 7 day chart</div>
   <div class="mini-chart" id="mini-chart"></div>
 </div>
-
+<button class="export-btn" id="export-btn" onclick="exportToCSV()">Export to Excel / CSV</button>
 <button class="save-btn" id="save-btn" onclick="saveDay()">Save today</button>
 <div class="pwa-hint" id="pwa-hint">Tap <b>Share ↑</b> → <b>Add to Home Screen</b> to install on iPhone</div>
 <div class="safe-bot"></div>
@@ -574,6 +575,40 @@ document.getElementById('quote-text').textContent = '"'+QUOTES[quoteIdx]+'"';
 render();
 renderGrocery();
 if(!window.navigator.standalone) document.getElementById('pwa-hint').style.display='block';
+function exportToCSV() {
+  const rows = [];
+  const MOOD_L = ['Drained','Low','Okay','Good','Amazing'];
+  const HABIT_LABELS = ['Breakfast in 1hr','Fiber Mucil','Lunch protein+veg','Dinner light no rice','Stop eating 8PM'];
+  const WORKOUT_LABELS = ['Jumping Jack 100x3','Plank 3min','Squat 1min','Wall Sit 1min'];
+  rows.push(['Date','Day','Weight (kg)',...HABIT_LABELS,...WORKOUT_LABELS,'Water (glasses)','Mood','Breakfast','Lunch','Dinner','Notes','Habits Done','Workout Done','Total Done'].join(','));
+  const keys = Object.keys(db).sort();
+  if(keys.length === 0) { alert('No data yet! Start tracking first.'); return; }
+  keys.forEach(key => {
+    const d = db[key];
+    const checks = d.checks || [];
+    const habits = checks.slice(0,5).map(v => v ? '1' : '0');
+    const workout = checks.slice(5,9).map(v => v ? '1' : '0');
+    while(habits.length < 5) habits.push('0');
+    while(workout.length < 4) workout.push('0');
+    const water = (d.water||[]).filter(Boolean).length;
+    const mood = d.mood >= 0 ? MOOD_L[d.mood] : '';
+    const meals = d.meals || {};
+    const clean = s => '"' + (s||'').replace(/"/g,'""') + '"';
+    const dt = new Date(key + 'T00:00:00');
+    const dayName = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
+    rows.push([key, dayName, d.weight||'',...habits,...workout,water,clean(mood),clean(meals.b),clean(meals.l),clean(meals.d),clean(meals.note),habits.filter(v=>v==='1').length,workout.filter(v=>v==='1').length,checks.filter(Boolean).length].join(','));
+  });
+  const csv = rows.join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'anggun-burn-tracker-' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}  
 </script>
 </body>
 </html>

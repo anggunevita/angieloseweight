@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="light-content">
+<meta name="apple-mobile-web-app-title" content="Burn Tracker">
+<title>Burn Tracker — Anggun</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #FFF0F5;
+  --bg2: #FFFFFF;
+  --bg3: #FFE8F2;
+  --card: #FFFFFF;
+  --pink: #D4307A;
+  --pink2: #E8609A;
+  --pink-bg: #FFE0EE;
+  --pink-border: rgba(212,48,122,0.18);
+  --pink-border2: rgba(212,48,122,0.30);
+  --text: #2A0F1A;
+  --text2: #A06080;
+  --text3: #C090A8;
+  --green: #1A8A4A;
+  --green-bg: #E8F8EE;
+  --green-border: #90D0B0;
+  --green-text: #0A7A3A;
+  --radius: 14px;
+  --radius-sm: 10px;
+}
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; min-height: 100vh; padding-bottom: 60px; }
+.safe-top { height: env(safe-area-inset-top, 44px); background: var(--bg2); }
+
+.header { background: var(--bg2); padding: 12px 20px 14px; border-bottom: 0.5px solid var(--pink-border); display: flex; align-items: center; justify-content: space-between; }
+.header-title { font-size: 20px; font-weight: 700; color: var(--pink); letter-spacing: -0.3px; }
+.header-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.start-chip { background: var(--pink-bg); border: 0.5px solid var(--pink-border2); border-radius: 20px; padding: 4px 10px; font-size: 11px; color: var(--pink); font-weight: 600; }
+
+.quote-bar { background: var(--pink-bg); border-bottom: 0.5px solid var(--pink-border); padding: 12px 20px; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.quote-flower { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.quote-body { flex: 1; }
+.quote-text { font-size: 12px; font-style: italic; color: var(--pink); line-height: 1.5; font-weight: 500; }
+.quote-tap { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+.date-nav { background: var(--bg2); display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; border-bottom: 0.5px solid var(--pink-border); }
+.nav-btn { width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid var(--pink-border2); background: transparent; color: var(--text2); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.nav-btn:active { background: var(--pink-bg); }
+.date-main { font-size: 14px; font-weight: 600; color: var(--text); text-align: center; }
+.date-sub { font-size: 11px; color: var(--pink); text-align: center; margin-top: 2px; }
+
+.stats-strip { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; background: var(--bg2); border-bottom: 0.5px solid var(--pink-border); }
+.stat-cell { padding: 12px 6px; text-align: center; border-right: 0.5px solid var(--pink-border); }
+.stat-cell:last-child { border-right: none; }
+.stat-val { font-size: 20px; font-weight: 700; color: var(--pink); }
+.stat-val.green { color: var(--green); }
+.stat-lbl { font-size: 9px; color: var(--text2); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.sec { padding: 0 16px; margin-top: 18px; }
+.sec-label { font-size: 10px; font-weight: 700; color: var(--pink); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+
+.check-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--card); border: 0.5px solid var(--pink-border); border-radius: var(--radius-sm); margin-bottom: 6px; cursor: pointer; -webkit-user-select: none; }
+.check-row.done { background: var(--green-bg); border-color: var(--green-border); }
+.check-circle { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--pink-border2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; color: transparent; }
+.check-row.done .check-circle { background: var(--green); border-color: var(--green); color: #fff; }
+.check-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.check-row.done .check-title { color: var(--green-text); }
+.check-hint { font-size: 11px; color: var(--text2); margin-top: 1px; }
+.check-row.done .check-hint { color: var(--green); }
+.workout-tag { font-size: 10px; font-weight: 600; color: var(--pink); background: var(--pink-bg); border: 0.5px solid var(--pink-border2); border-radius: 4px; padding: 2px 7px; display: inline-block; margin-top: 5px; }
+.check-row.done .workout-tag { color: var(--green-text); background: var(--green-bg); border-color: var(--green-border); }
+
+.water-row { display: flex; gap: 7px; flex-wrap: wrap; }
+.drop-btn { width: 38px; height: 38px; border-radius: 50%; border: 0.5px solid var(--pink-border2); background: var(--bg2); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; -webkit-user-select: none; }
+.drop-btn.on { background: #D0EAFF; border-color: #60A8E0; }
+
+.mood-row { display: flex; gap: 8px; justify-content: space-between; }
+.mood-btn { flex: 1; padding: 10px 4px; border: 0.5px solid var(--pink-border); border-radius: var(--radius-sm); background: var(--card); text-align: center; cursor: pointer; -webkit-user-select: none; }
+.mood-btn.sel { border-color: var(--pink); background: var(--pink-bg); }
+.mood-emoji { font-size: 20px; display: block; }
+.mood-lbl { font-size: 9px; color: var(--text2); margin-top: 3px; display: block; }
+.mood-btn.sel .mood-lbl { color: var(--pink); font-weight: 600; }
+
+.input-field { width: 100%; background: var(--card); border: 0.5px solid var(--pink-border); border-radius: var(--radius-sm); color: var(--text); font-size: 13px; padding: 10px 12px; font-family: inherit; -webkit-appearance: none; }
+.input-field:focus { outline: none; border-color: var(--pink2); }
+.input-field::placeholder { color: var(--text3); }
+textarea.input-field { resize: none; height: 70px; line-height: 1.5; }
+
+.meal-lbl { font-size: 10px; color: var(--pink); font-weight: 700; letter-spacing: 0.4px; margin-bottom: 4px; margin-top: 8px; }
+
+.geprek-warn { background: #FFF3E0; border: 0.5px solid #E8A060; border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: #A04800; margin-bottom: 8px; display: none; }
+
+.goal-row { display: flex; align-items: center; gap: 10px; }
+.num-input { background: var(--card); border: 0.5px solid var(--pink-border2); border-radius: var(--radius-sm); color: var(--text); font-size: 20px; font-weight: 700; padding: 10px 12px; width: 90px; font-family: inherit; -webkit-appearance: none; }
+.goal-meta { font-size: 12px; color: var(--text2); line-height: 1.7; }
+.goal-meta b { color: var(--pink); font-weight: 600; }
+.progress-bg { height: 8px; background: var(--pink-bg); border-radius: 4px; overflow: hidden; margin-top: 10px; }
+.progress-fill { height: 100%; background: var(--pink); border-radius: 4px; transition: width 0.4s; }
+.progress-lbl { font-size: 11px; color: var(--text2); margin-top: 5px; }
+
+.grab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.grab-card { background: var(--card); border: 0.5px solid var(--pink-border); border-radius: var(--radius-sm); padding: 12px; cursor: pointer; -webkit-user-select: none; }
+.grab-card.sel { border-color: var(--pink); background: var(--pink-bg); }
+.grab-icon { font-size: 22px; margin-bottom: 5px; }
+.grab-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.grab-desc { font-size: 11px; color: var(--text2); margin-top: 2px; line-height: 1.4; }
+.grab-kcal { font-size: 10px; color: var(--pink); margin-top: 5px; font-weight: 600; }
+.grab-tag { font-size: 9px; background: var(--pink-bg); color: var(--pink); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; border: 0.5px solid var(--pink-border2); }
+.grab-open { width: 100%; margin-top: 10px; padding: 11px; background: transparent; border: 0.5px solid var(--pink-border2); border-radius: var(--radius-sm); color: var(--pink); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.grab-open:active { background: var(--pink-bg); }
+
+.grocery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.grocery-item { background: var(--card); border: 0.5px solid var(--pink-border); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; -webkit-user-select: none; }
+.grocery-item.checked { background: var(--green-bg); border-color: var(--green-border); }
+.grocery-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--pink-border2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: transparent; }
+.grocery-item.checked .grocery-check { background: var(--green); border-color: var(--green); color: #fff; }
+.grocery-icon { font-size: 16px; }
+.grocery-name { font-size: 12px; font-weight: 500; color: var(--text); }
+.grocery-item.checked .grocery-name { color: var(--green-text); text-decoration: line-through; }
+.grocery-sub { font-size: 10px; color: var(--text2); }
+.grocery-reset { width: 100%; margin-top: 8px; padding: 9px; background: transparent; border: 0.5px solid var(--pink-border); border-radius: var(--radius-sm); color: var(--text2); font-size: 12px; cursor: pointer; font-family: inherit; }
+
+.mini-chart { display: flex; align-items: flex-end; gap: 4px; height: 72px; margin-top: 8px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.bar { width: 100%; background: var(--pink-bg); border-radius: 3px 3px 0 0; min-height: 4px; border: 0.5px solid var(--pink-border); }
+.bar.today { background: var(--pink); border-color: var(--pink); }
+.bar-day { font-size: 9px; color: var(--text3); }
+.bar-wt { font-size: 9px; color: var(--text2); }
+
+.save-btn { display: block; width: calc(100% - 32px); margin: 20px 16px 0; padding: 16px; background: var(--pink); color: #fff; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; -webkit-appearance: none; }
+.save-btn:active { opacity: 0.85; }
+
+.pwa-hint { margin: 12px 16px 0; padding: 12px; background: var(--card); border: 0.5px solid var(--pink-border); border-radius: var(--radius-sm); font-size: 12px; color: var(--text2); text-align: center; line-height: 1.6; display: none; }
+.safe-bot { height: env(safe-area-inset-bottom, 24px); }
+</style>
+</head>
+<body>
+
+<div class="safe-top"></div>
+
+<div class="header">
+  <div>
+    <div class="header-title">🌸 Burn Tracker</div>
+    <div class="header-sub">Anggun's daily program</div>
+  </div>
+  <div class="start-chip">Start: 62.3 kg</div>
+</div>
+
+<div class="quote-bar" onclick="nextQuote()">
+  <div class="quote-flower">💬</div>
+  <div class="quote-body">
+    <div class="quote-text" id="quote-text">Loading your quote...</div>
+    <div class="quote-tap">Tap for a new one</div>
+  </div>
+</div>
+
+<div class="date-nav">
+  <button class="nav-btn" onclick="changeDay(-1)">&#8249;</button>
+  <div>
+    <div class="date-main" id="date-label">—</div>
+    <div class="date-sub" id="day-num">—</div>
+  </div>
+  <button class="nav-btn" onclick="changeDay(1)">&#8250;</button>
+</div>
+
+<div class="stats-strip">
+  <div class="stat-cell">
+    <div class="stat-val" id="s-habit">0/5</div>
+    <div class="stat-lbl">Habits</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val" id="s-workout">0/4</div>
+    <div class="stat-lbl">Workout</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val" id="s-water">0</div>
+    <div class="stat-lbl">Glasses</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val green" id="s-mood">—</div>
+    <div class="stat-lbl">Mood</div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-label">🍽️ Daily habits</div>
+  <div class="check-row" id="c0" onclick="toggle(0)">
+    <div class="check-circle" id="ci0">✓</div>
+    <div>
+      <div class="check-title">Breakfast within 1 hour of waking</div>
+      <div class="check-hint">Activates metabolism · prevents overeating later</div>
+    </div>
+  </div>
+  <div class="check-row" id="c1" onclick="toggle(1)">
+    <div class="check-circle" id="ci1">✓</div>
+    <div>
+      <div class="check-title">Drink fiber mucil after eating</div>
+      <div class="check-hint">Improves digestion · keeps you full longer</div>
+    </div>
+  </div>
+  <div class="check-row" id="c2" onclick="toggle(2)">
+    <div class="check-circle" id="ci2">✓</div>
+    <div>
+      <div class="check-title">Lunch — protein + veggies</div>
+      <div class="check-hint">Ricecooker bowl or clean GrabFood · ½ scoop rice max</div>
+    </div>
+  </div>
+  <div class="check-row" id="c3" onclick="toggle(3)">
+    <div class="check-circle" id="ci3">✓</div>
+    <div>
+      <div class="check-title">Dinner — light, no rice</div>
+      <div class="check-hint">Chicken soup or steamed · low calorie at night</div>
+    </div>
+  </div>
+  <div class="check-row" id="c4" onclick="toggle(4)">
+    <div class="check-circle" id="ci4">✓</div>
+    <div>
+      <div class="check-title">Stop eating after 8 PM</div>
+      <div class="check-hint">Lets your body burn fat overnight · better sleep</div>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-label">💪 Daily workout</div>
+
+  <div class="check-row" id="c5" onclick="toggle(5)">
+    <div class="check-circle" id="ci5">✓</div>
+    <div style="flex:1">
+      <div class="check-title">Jumping Jack — 100 × 3 sets</div>
+      <div class="check-hint">Full body cardio · burns ~90 kcal · warms up every muscle group</div>
+      <div class="workout-tag">300 reps total</div>
+    </div>
+  </div>
+
+  <div class="check-row" id="c6" onclick="toggle(6)">
+    <div class="check-circle" id="ci6">✓</div>
+    <div style="flex:1">
+      <div class="check-title">Plank — 1 min front · 1 min right · 1 min left</div>
+      <div class="check-hint">Core strength · tightens waist · improves posture · burns belly fat</div>
+      <div class="workout-tag">3 minutes total</div>
+    </div>
+  </div>
+
+  <div class="check-row" id="c7" onclick="toggle(7)">
+    <div class="check-circle" id="ci7">✓</div>
+    <div style="flex:1">
+      <div class="check-title">Squat — 1 minute</div>
+      <div class="check-hint">Targets thighs & glutes · builds lower body muscle · boosts metabolism</div>
+      <div class="workout-tag">~20–25 reps</div>
+    </div>
+  </div>
+
+  <div class="check-row" id="c8" onclick="toggle(8)">
+    <div class="check-circle" id="ci8">✓</div>
+    <div style="flex:1">
+      <div class="check-title">Wall Sit — 1 minute</div>
+      <div class="check-hint">Burns inner thigh & glute fat · isometric strength · no equipment needed</div>
+      <div class="workout-tag">Hold for 60 seconds</div>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-label">Water — 8 glasses target</div>
+  <div class="water-row">
+    <div class="drop-btn" id="w0" onclick="toggleWater(0)">💧</div>
+    <div class="drop-btn" id="w1" onclick="toggleWater(1)">💧</div>
+    <div class="drop-btn" id="w2" onclick="toggleWater(2)">💧</div>
+    <div class="drop-btn" id="w3" onclick="toggleWater(3)">💧</div>
+    <div class="drop-btn" id="w4" onclick="toggleWater(4)">💧</div>
+    <div class="drop-btn" id="w5" onclick="toggleWater(5)">💧</div>
+    <div class="drop-btn" id="w6" onclick="toggleWater(6)">💧</div>
+    <div class="drop-btn" id="w7" onclick="toggleWater(7)">💧</div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-label">Energy & mood</div>
+  <div class="mood-row">
+    <div class="mood-btn" id="m0" onclick="setMood(0)"><span class="mood-emoji">😴</span><span class="mood-lbl">Drained</span></div>
+    <div class="mood-btn" id="m1" onclick="setMood(1)"><span class="mood-emoji">😕</span><span class="mood-lbl">Low</span></div>
+    <div class="mood-btn" id="m2" onclick="setMood(2)"><span class="mood-emoji">😐</span><span class="mood-lbl">Okay</span></div>
+    <div class="mood-btn" id="m3" onclick="setMood(3)"><span class="mood-emoji">🙂</span><span class="mood-lbl">Good</span></div>
+    <div class="mood-btn" id="m4" onclick="setMood(4)"><span class="mood-emoji">🔥</span><span class="mood-lbl">Amazing</span></div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-label">Weekly weight goal</div>
+  <div class="goal-row">
+    <input class="num-input" type="number" id="wt-current" value="62.3" step="0.1" min="40" max="120" inputmode="decimal" oninput="updateGoal()">
+    <span style="font-size:15px;color:var(--text2)">kg</span>
+    <div class="goal-meta">
+      Goal this week: <b id="wt-goal-lbl">61.8 kg</b><br>
+      Target: <b>49–52 kg</b>
+    </div>
+  </div>
+  <div class="progress-bg"><div class="progress-fill" id="wt-bar" style="width:0%"></div></div>
+  <div class="progress-lbl" id="wt-lbl">Enter your weight above</div>
+</div>
+
+<div class="sec">
+  <div class="sec-label">Food log</div>
+  <div class="geprek-warn" id="geprek-warn">⚠️ Fried/oily food detected — keep dinner light today!</div>
+  <div class="meal-lbl">BREAKFAST</div>
+  <input class="input-field" type="text" id="m-b" placeholder="what did you eat..." oninput="checkGeprek()">
+  <div class="meal-lbl">LUNCH</div>
+  <input class="input-field" type="text" id="m-l" placeholder="what did you eat..." oninput="checkGeprek()">
+  <div class="meal-lbl">DINNER</div>
+  <input class="input-field" type="text" id="m-d" placeholder="what did you eat..." oninput="checkGeprek()">
+  <div class="meal-lbl">DAILY NOTES</div>
+  <textarea class="input-field" id="m-note" placeholder="how was your day, any cravings, feelings..."></textarea>
+</div>
+
+<div class="sec">
+  <div class="sec-label">GrabFood BSD — clean picks</div>
+  <div class="grab-grid">
+    <div class="grab-card" id="g0" onclick="selGrab(0)">
+      <div class="grab-icon">🥗</div>
+      <div class="grab-name">Burgreens</div>
+      <div class="grab-desc">Blackpepper Bowl — brown rice, tofu, steamed veggies</div>
+      <div class="grab-kcal">~518 kcal · 28g protein</div>
+      <div class="grab-tag">No MSG · Plant-based</div>
+    </div>
+    <div class="grab-card" id="g1" onclick="selGrab(1)">
+      <div class="grab-icon">🐟</div>
+      <div class="grab-name">HONU</div>
+      <div class="grab-desc">Chef's Bowl — salmon, edamame, nori</div>
+      <div class="grab-kcal">~450 kcal · 38g protein</div>
+      <div class="grab-tag">High omega-3</div>
+    </div>
+    <div class="grab-card" id="g2" onclick="selGrab(2)">
+      <div class="grab-icon">🍗</div>
+      <div class="grab-name">Greenly</div>
+      <div class="grab-desc">Lean Teriyaki Chicken Bowl — grilled, no fry</div>
+      <div class="grab-kcal">~380 kcal · 35g protein</div>
+      <div class="grab-tag">Best value</div>
+    </div>
+    <div class="grab-card" id="g3" onclick="selGrab(3)">
+      <div class="grab-icon">🫙</div>
+      <div class="grab-name">Klean Bowl</div>
+      <div class="grab-desc">Healthy comfort bowl — BSD Boulevard</div>
+      <div class="grab-kcal">~420 kcal · 30g protein</div>
+      <div class="grab-tag">Clean comfort</div>
+    </div>
+    <div class="grab-card" id="g4" onclick="selGrab(4)">
+      <div class="grab-icon">🍄</div>
+      <div class="grab-name">Burgreens</div>
+      <div class="grab-desc">Mushroom Bakso Soup — very filling, low cal</div>
+      <div class="grab-kcal">~340 kcal · 18g protein</div>
+      <div class="grab-tag">Lowest kcal</div>
+    </div>
+    <div class="grab-card" id="g5" onclick="selGrab(5)">
+      <div class="grab-icon">🌯</div>
+      <div class="grab-name">Greenly</div>
+      <div class="grab-desc">BBQ Chicken Wrap — ask no sauce</div>
+      <div class="grab-kcal">~340 kcal · 28g protein</div>
+      <div class="grab-tag">Quick & easy</div>
+    </div>
+  </div>
+  <button class="grab-open" onclick="window.location.href='https://food.grab.com/id/en/'">Open GrabFood ↗</button>
+</div>
+
+<div class="sec">
+  <div class="sec-label">🛒 Weekly grocery list</div>
+  <div class="grocery-grid" id="grocery-grid"></div>
+  <button class="grocery-reset" onclick="resetGrocery()">Reset list</button>
+</div>
+
+<div class="sec">
+  <div class="sec-label">Weight — 7 day chart</div>
+  <div class="mini-chart" id="mini-chart"></div>
+</div>
+
+<button class="save-btn" id="save-btn" onclick="saveDay()">Save today</button>
+<div class="pwa-hint" id="pwa-hint">Tap <b>Share ↑</b> → <b>Add to Home Screen</b> to install on iPhone</div>
+<div class="safe-bot"></div>
+
+<script>
+const QUOTES = [
+  "Your body can do it. It's your mind you have to convince.",
+  "Small steps every day lead to big changes.",
+  "You don't have to be extreme — just consistent.",
+  "Every meal is a chance to nourish your body.",
+  "Progress, not perfection.",
+  "The only bad workout is the one that didn't happen.",
+  "You are stronger than your excuses.",
+  "One day at a time. One meal at a time.",
+  "Discipline is choosing what you want most over what you want now.",
+  "Your future self will thank you for what you do today.",
+  "Fall in love with taking care of yourself.",
+  "Good things take time. Be patient with yourself.",
+  "You've got this, Anggun. Keep going. 🌸",
+  "Consistency is more powerful than intensity.",
+  "Rest when you must. Quit never.",
+];
+
+const GROCERIES = [
+  { icon:"🍗", name:"Dada ayam", sub:"500g – 1kg, protein utama" },
+  { icon:"🥦", name:"Brokoli", sub:"Protein sayur, tinggi serat" },
+  { icon:"🍄", name:"Jamur shimeji", sub:"Rendah kalori, mengenyangkan" },
+  { icon:"🥕", name:"Wortel", sub:"Serat tinggi, manis natural" },
+  { icon:"🥬", name:"Napa cabbage", sub:"Sup & ricecooker bowl" },
+  { icon:"🫛", name:"Edamame", sub:"11g protein per 100g" },
+  { icon:"🌶️", name:"Cabe rawit", sub:"Boost metabolisme" },
+  { icon:"🧅", name:"Bawang bombai", sub:"Base semua masakan" },
+  { icon:"🧄", name:"Bawang putih bubuk", sub:"Simpan di pantry" },
+  { icon:"🥚", name:"Telur (1 tray)", sub:"Sarapan cepat — wajib ada" },
+  { icon:"🍌", name:"Pisang", sub:"Sarapan 0 menit" },
+  { icon:"🧴", name:"Kecap asin", sub:"Low sodium kalau bisa" },
+  { icon:"🥛", name:"Susu UHT protein tinggi", sub:"Sarapan / snack" },
+  { icon:"🌾", name:"Oat instan", sub:"Sarapan microwave 2 menit" },
+  { icon:"🍞", name:"Roti gandum", sub:"Sarapan cepat dgn telur" },
+  { icon:"🍚", name:"Beras merah", sub:"Ganti nasi putih perlahan" },
+];
+
+const DAYS_F = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAYS_S = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MOOD_LABELS = ['Drained','Low','Okay','Good','Amazing'];
+
+let offset = 0;
+let db = {};
+let groceryChecked = [];
+let quoteIdx = 0;
+
+function loadStorage() {
+  try {
+    const r = localStorage.getItem('burn_v3');
+    if(r) { const p = JSON.parse(r); db = p.db||{}; groceryChecked = p.grocery||[]; }
+  } catch(e){}
+}
+function saveStorage() {
+  try { localStorage.setItem('burn_v3', JSON.stringify({db, grocery: groceryChecked})); } catch(e){}
+}
+function getKey(o) { const d=new Date(); d.setDate(d.getDate()+o); return d.toISOString().split('T')[0]; }
+function getDateStr(o) { const d=new Date(); d.setDate(d.getDate()+o); return DAYS_F[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear(); }
+function getDaySub(o) { const s=new Date('2026-06-18'),d=new Date(); d.setDate(d.getDate()+o); const n=Math.round((d-s)/86400000)+1; return n>0?'Day '+n+' of your program':'Before program start'; }
+function defData() { return {checks:[false,false,false,false,false,false,false,false,false],water:[false,false,false,false,false,false,false,false],mood:-1,weight:62.3,meals:{b:'',l:'',d:'',note:''}}; }
+function getDay() { return db[getKey(offset)]||defData(); }
+function setDay(data) { db[getKey(offset)]=data; saveStorage(); }
+
+function render() {
+  const data = getDay();
+  document.getElementById('date-label').textContent = getDateStr(offset);
+  document.getElementById('day-num').textContent = getDaySub(offset);
+  for(let i=0;i<9;i++){const r=document.getElementById('c'+i);data.checks[i]?r.classList.add('done'):r.classList.remove('done');}
+  for(let i=0;i<8;i++){const b=document.getElementById('w'+i);data.water[i]?b.classList.add('on'):b.classList.remove('on');}
+  for(let i=0;i<5;i++){const b=document.getElementById('m'+i);data.mood===i?b.classList.add('sel'):b.classList.remove('sel');}
+  document.getElementById('wt-current').value = data.weight;
+  document.getElementById('m-b').value = data.meals.b;
+  document.getElementById('m-l').value = data.meals.l;
+  document.getElementById('m-d').value = data.meals.d;
+  document.getElementById('m-note').value = data.meals.note;
+  updateStats(data);
+  updateGoal();
+  checkGeprek();
+  renderChart();
+}
+
+function updateStats(data) {
+  const done = data.checks.filter(Boolean).length;
+  const habit = data.checks.slice(0,5).filter(Boolean).length;
+  const workout = data.checks.slice(5,9).filter(Boolean).length;
+  document.getElementById('s-check').textContent = done+'/9';
+  document.getElementById('s-habit').textContent = habit+'/5';
+  document.getElementById('s-workout').textContent = workout+'/4';
+  document.getElementById('s-water').textContent = data.water.filter(Boolean).length;
+  document.getElementById('s-mood').textContent = data.mood>=0 ? MOOD_LABELS[data.mood] : '—';
+}
+
+function snapshot() {
+  const data = getDay();
+  data.checks = Array.from({length:9},(_,i)=>document.getElementById('c'+i).classList.contains('done'));
+  data.water = Array.from({length:8},(_,i)=>document.getElementById('w'+i).classList.contains('on'));
+  const sel = document.querySelector('.mood-btn.sel');
+  data.mood = sel ? parseInt(sel.id.replace('m','')) : -1;
+  data.weight = parseFloat(document.getElementById('wt-current').value)||62.3;
+  data.meals = { b:document.getElementById('m-b').value, l:document.getElementById('m-l').value, d:document.getElementById('m-d').value, note:document.getElementById('m-note').value };
+  setDay(data);
+  updateStats(data);
+}
+
+function toggle(i) { snapshot(); const d=getDay(); d.checks[i]=!d.checks[i]; setDay(d); render(); }
+function toggleWater(i) { snapshot(); const d=getDay(); d.water[i]=!d.water[i]; setDay(d); render(); }
+function setMood(i) { snapshot(); const d=getDay(); d.mood=i; setDay(d); render(); }
+
+function updateGoal() {
+  const cur = parseFloat(document.getElementById('wt-current').value)||62.3;
+  const weeklyGoal = Math.max(49, cur - 0.5);
+  document.getElementById('wt-goal-lbl').textContent = weeklyGoal.toFixed(1)+' kg';
+  const totalLose = 62.3 - 49;
+  const lost = 62.3 - cur;
+  const pct = Math.min(Math.max(Math.round((lost/totalLose)*100),0),100);
+  document.getElementById('wt-bar').style.width = pct+'%';
+  document.getElementById('wt-lbl').textContent = pct+'% toward goal ('+lost.toFixed(1)+' kg lost so far)';
+}
+
+function checkGeprek() {
+  const all = ['m-b','m-l','m-d'].map(k=>document.getElementById(k).value).join(' ').toLowerCase();
+  const bad = ['geprek','goreng','fried','kfc','mcd','burger','minyak','crispy'];
+  document.getElementById('geprek-warn').style.display = bad.some(w=>all.includes(w))?'block':'none';
+}
+
+function selGrab(i) { for(let j=0;j<6;j++){const c=document.getElementById('g'+j);j===i?c.classList.add('sel'):c.classList.remove('sel');} }
+
+function renderGrocery() {
+  const grid = document.getElementById('grocery-grid');
+  grid.innerHTML = '';
+  GROCERIES.forEach((item,i) => {
+    const div = document.createElement('div');
+    div.className = 'grocery-item' + (groceryChecked[i]?' checked':'');
+    div.onclick = () => { groceryChecked[i]=!groceryChecked[i]; saveStorage(); renderGrocery(); };
+    div.innerHTML = '<div class="grocery-check">✓</div><div class="grocery-icon">'+item.icon+'</div><div><div class="grocery-name">'+item.name+'</div><div class="grocery-sub">'+item.sub+'</div></div>';
+    grid.appendChild(div);
+  });
+}
+
+function resetGrocery() { groceryChecked = []; saveStorage(); renderGrocery(); }
+
+function renderChart() {
+  const chart = document.getElementById('mini-chart');
+  chart.innerHTML = '';
+  const entries = [];
+  for(let i=-6;i<=0;i++){const key=getKey(i),d=new Date();d.setDate(d.getDate()+i);entries.push({day:DAYS_S[d.getDay()],w:db[key]?db[key].weight:null,isToday:i===0});}
+  const vals = entries.map(e=>e.w).filter(Boolean);
+  const minW = vals.length?Math.min(...vals)-0.5:60;
+  const maxW = vals.length?Math.max(...vals)+0.5:63;
+  const range = maxW-minW||1;
+  entries.forEach(({day,w,isToday})=>{
+    const col=document.createElement('div'); col.className='bar-col';
+    const h=w?Math.round(((w-minW)/range)*50)+8:4;
+    col.innerHTML=(w?'<div class="bar-wt">'+w.toFixed(1)+'</div>':'<div class="bar-wt" style="opacity:0">0</div>')+'<div class="bar'+(isToday?' today':'')+'" style="height:'+h+'px"></div><div class="bar-day">'+day+'</div>';
+    chart.appendChild(col);
+  });
+}
+
+function nextQuote() { quoteIdx=(quoteIdx+1)%QUOTES.length; document.getElementById('quote-text').textContent='"'+QUOTES[quoteIdx]+'"'; }
+
+function saveDay() {
+  snapshot();
+  const btn=document.getElementById('save-btn');
+  const d=getDay();
+  btn.textContent='Saved! ✓ '+d.checks.filter(Boolean).length+'/9 done · '+d.water.filter(Boolean).length+' glasses · '+d.weight+' kg';
+  setTimeout(()=>{btn.textContent='Save today';},2500);
+  renderChart();
+}
+
+function changeDay(dir) { snapshot(); offset+=dir; render(); }
+
+loadStorage();
+if(groceryChecked.length===0) groceryChecked = new Array(GROCERIES.length).fill(false);
+quoteIdx = Math.floor(Math.random()*QUOTES.length);
+document.getElementById('quote-text').textContent = '"'+QUOTES[quoteIdx]+'"';
+render();
+renderGrocery();
+if(!window.navigator.standalone) document.getElementById('pwa-hint').style.display='block';
+</script>
+</body>
+</html>
